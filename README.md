@@ -16,8 +16,8 @@ See this ERD [LucidChart](https://www.lucidchart.com/documents/view/344365a8-55c
 - [x] Give a raise of 10% to ALL employees with good reviews.  This is different from the raise method which already exists, and also needs to operate over all employees of ALL departments.
 
 *Hard Mode*
-- [ ] Add a companies table.  Add one company called "The Iron Yard."
-- [ ] Add a foreign key on the departments table which points to companies. Associate all existing departments with The Iron Yard.
+- [x] Add a companies table.  Add one company called "The Iron Yard."
+- [x] Add a foreign key on the departments table which points to companies. Associate all existing departments with The Iron Yard.
 - [ ] Change the employee `salary` field to `rate`.  Do math on each employee to convert an annual salary to an hourly rate, then save the new hourly rate in the field.
 
 The last migration will not be reversible if you write it in a `change` method.  Instead, write both `up` and `down` methods.
