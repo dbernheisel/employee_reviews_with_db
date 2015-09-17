@@ -13,7 +13,7 @@ See this ERD [LucidChart](https://www.lucidchart.com/documents/view/344365a8-55c
 - [x] Return all employees with names which are palindromes.
 - [x] Return the department with the most employees.
 - [x] Move everyone from one department to another department.
-- [ ] Give a raise of 10% to ALL employees with good reviews.  This is different from the raise method which already exists, and also needs to operate over all employees of ALL departments.
+- [x] Give a raise of 10% to ALL employees with good reviews.  This is different from the raise method which already exists, and also needs to operate over all employees of ALL departments.
 
 *Hard Mode*
 - [ ] Add a companies table.  Add one company called "The Iron Yard."
