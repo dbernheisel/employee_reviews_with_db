@@ -7,6 +7,7 @@ ActiveRecord::Base.establish_connection(
 
 class Department < ActiveRecord::Base
   has_many :employees
+  belongs_to :company
   validates :name, presence: true
 
   def add_employee(employee)
@@ -63,14 +64,9 @@ class Department < ActiveRecord::Base
   def self.merge_departments(stay:, go:)
     return false if stay.nil? || !stay.is_a?(Department)
     return false if go.nil? || !stay.is_a?(Department)
-    go.employees.each do |e|
-      go.employees.delete(e) if stay.add_employee(e)
-    end
+    go.employees.each { |e| stay.add_employee(e) }
     go.save
     stay.save
-    return true
   end
-
-
 
 end
