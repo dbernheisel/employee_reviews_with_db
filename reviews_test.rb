@@ -284,4 +284,10 @@ class ReviewsTest < Minitest::Test
     assert_equal 440, Employee.total_salary
   end
 
+  def test_create_new_company
+    Company.destroy_all
+    c = Company.create(name: "The Iron Yard")
+    assert_equal c.id, Company.find(c.id).id
+  end
+
 end
