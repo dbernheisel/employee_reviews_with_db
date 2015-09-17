@@ -54,25 +54,32 @@ class Employee < ActiveRecord::Base
     palindrome_employees
   end
 
+  def self.paid_above_average_employees
+    employees_names_array = []
+    Employee.select(:name).where(["salary > ?", Employee.average(:salary)]).each do |e|
+      employees_names_array << e.name
+    end
+    employees_names_array
+  end
+
   def self.give_raise(amount: 0, percentage: 0, only_satisfactory: true)
-    return false if amount == 0 && percentage == 0
-    return false if amount != 0 && percentage != 0
+    return false if (amount == 0 && percentage == 0) || (amount != 0 && percentage != 0)
     percentage != 0 ? percentage_mode = true : percentage_mode = false
     getting_raise = []
     if only_satisfactory
-      Employee.select { |e| e.satisfactory? }
+      getting_raise = Employee.all.select { |e| e.satisfactory? }
     else
-      getting_raise = Employee.select(:salary)
+      getting_raise = Employee.all
     end
     getting_raise.each do |e|
-      amount = e.total_salary * percentage if percentage_mode
+      amount = (e.salary * (percentage/100.0)) if percentage_mode
       e.give_raise(amount)
-      e.save
+      e.salary
     end
   end
 
   def self.total_salary
-    Employee.select(:id, :salary).reduce(0) { |sum, e| sum + e.salary }
+    Employee.all.select(:salary).reduce(0) { |sum, e| sum + e.salary }
   end
 
 end
