@@ -7,4 +7,5 @@ ActiveRecord::Base.establish_connection(
 
 class Review < ActiveRecord::Base
   belongs_to :employee
+  validates :text, presence: true
 end

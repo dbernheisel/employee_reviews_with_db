@@ -13,8 +13,7 @@ class EmployeeMigration < ActiveRecord::Migration
       t.string :email
       t.integer :department_id
       t.boolean :satisfactory, default: true
-      t.integer :salary
-      #t.decimal :salary, precision: 9, scale: 2
+      t.decimal :salary, precision: 9, scale: 2
       t.timestamps null: false
     end
   end
