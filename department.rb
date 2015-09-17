@@ -8,7 +8,7 @@ ActiveRecord::Base.establish_connection(
 class Department < ActiveRecord::Base
   has_many :employees
   belongs_to :company
-  validates :name, presence: true
+  validates :name, uniqueness: true, presence: true
 
   def add_employee(employee)
     return false if employee.nil?
