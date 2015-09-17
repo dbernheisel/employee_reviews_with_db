@@ -6,6 +6,6 @@ ActiveRecord::Base.establish_connection(
 )
 
 class Company < ActiveRecord::Base
-
+  has_many :departments
 
 end
