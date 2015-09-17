@@ -1,32 +1,37 @@
-class Employee
+require 'active_record'
+require './review'
+require 'pry'
 
-  attr_reader :name, :salary
+ActiveRecord::Base.establish_connection(
+  adapter: 'sqlite3',
+  database: 'development.sqlite3' #name of file on disk
+)
 
-  def initialize(name:, salary:, email: nil, phone: nil)
-    @name = name
-    @salary = salary
-    @email = email
-    @phone = phone
-    @reviews = []
-    @satisfactory = true
-  end
+class Employee < ActiveRecord::Base
+  belongs_to :department
+  has_many :reviews
+  #validates :name, presence: true
+  #validates :salary, presence: true
 
   def recent_review
-    @reviews.last
+    reviews.last
   end
 
   def satisfactory?
-    @satisfactory
+    self.satisfactory
   end
 
   def give_raise(amount)
-    @salary += amount
+    self.salary += amount
+    self.save
   end
 
   def give_review(review)
-    @reviews << review
+    return false if review.nil?
+    reviews << review
     assess_performance
-    true
+    self.save
+    return true
   end
 
   def assess_performance
@@ -35,9 +40,40 @@ class Employee
     good_terms = Regexp.union(good_terms)
     bad_terms = Regexp.union(bad_terms)
 
-    count_good = @reviews.last.scan(good_terms).length
-    count_bad = @reviews.last.scan(bad_terms).length
+    count_good = reviews.last.text.scan(good_terms).length
+    count_bad = reviews.last.text.scan(bad_terms).length
 
-    @satisfactory = (count_good - count_bad > 0)
+    self.satisfactory = (count_good - count_bad > 0)
+    self.save
   end
+
+  def self.palindrome_employees
+    palindrome_employees = []
+    Employee.select(:name).each do |e|
+      palindrome_employees << e.name if e.name.downcase == e.name.downcase.reverse
+    end
+    palindrome_employees
+  end
+
+  def self.give_raise(amount: 0, percentage: 0, only_satisfactory: true)
+    return false if amount == 0 && percentage == 0
+    return false if amount != 0 && percentage != 0
+    percentage != 0 ? percentage_mode = true : percentage_mode = false
+    getting_raise = []
+    if only_satisfactory
+      Employee.select { |e| e.satisfactory? }
+    else
+      getting_raise = Employee.select(:salary)
+    end
+    getting_raise.each do |e|
+      amount = e.total_salary * percentage if percentage_mode
+      e.give_raise(amount)
+      e.save
+    end
+  end
+
+  def self.total_salary
+    Employee.select(:id, :salary).reduce(0) { |sum, e| sum + e.salary }
+  end
+
 end
