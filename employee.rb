@@ -10,7 +10,7 @@ ActiveRecord::Base.establish_connection(
 class Employee < ActiveRecord::Base
   belongs_to :department
   has_many :reviews
-  #validates :name, presence: true
+  validates :name, presence: true
   #validates :salary, presence: true
 
   def recent_review
