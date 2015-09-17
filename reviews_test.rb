@@ -1,78 +1,97 @@
 require 'minitest/autorun'
 require 'minitest/pride'
+require 'active_record'
 require './employee'
 require './department'
-require 'byebug'
+require './review'
+require './employee_migration'
+require './department_migration'
+require './review_migration'
+require 'pry'
+
+
+ActiveRecord::Base.establish_connection(
+  adapter: "sqlite3",
+  database: "testing.sqlite3"
+)
+
+
+ReviewMigration.migrate(:down) rescue nil
+DepartmentMigration.migrate(:down) rescue nil
+EmployeeMigration.migrate(:down) rescue nil
+ReviewMigration.migrate(:up)
+DepartmentMigration.migrate(:up)
+EmployeeMigration.migrate(:up)
+
 
 class ReviewsTest < Minitest::Test
 
   def test_create_new_department
-    assert Department.new("Development")
+    dept = Department.create(name: "Development")
+    #assert_nil Department.create()
     assert_raises(ArgumentError) do
-      Department.new()
+      Department.create(1,2)
     end
-    assert_raises(ArgumentError) do
-      Department.new(1,2)
-    end
+    assert Department.find(dept.id)
   end
 
   def test_create_new_employee
-    assert Employee.new( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
+    assert Employee.create( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
     assert_raises(ArgumentError) do
-      Employee.new(1,2,3,4,5)
+      Employee.create(1,2,3,4,5)
     end
     assert_raises(ArgumentError) do
-      Employee.new(1,2,3)
+      Employee.create(1,2,3)
     end
   end
 
   def test_add_employee_to_department
-    e = Employee.new(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
-    d = Department.new("Development")
+    e = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
+    d = Department.create(name: "Development")
     d.add_employee(e)
     assert_equal [e], d.employees
   end
 
   def test_get_employee_name
-    employee = Employee.new( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
-    assert_equal "Joanna", employee.name
+    employee = Employee.create( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
+    assert_equal "Joanna", Employee.find(employee.id).name
   end
 
   def test_get_employee_salary
-    employee = Employee.new( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
-    assert_equal 85000, employee.salary
+    employee = Employee.create( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 85000)
+    assert_equal 85000, Employee.find(employee.id).salary
   end
 
   def test_get_department_salary
-    employee = Employee.new(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
-    employee2 = Employee.new(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
-    development = Department.new("Development")
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
+    development = Department.create(name: "Development")
     development.add_employee(employee)
     development.add_employee(employee2)
     assert_equal 230000, development.total_salary
   end
 
   def test_employees_can_be_reviewed
-    employee = Employee.new(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
-    assert employee.give_review("This employee started off great. Not as impressed with her recent performance.")
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    assert employee.give_review(Review.new(text: "This employee started off great. Not as impressed with her recent performance."))
   end
 
   def test_new_employees_should_be_satisfactory
-    employee = Employee.new(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
     assert employee.satisfactory?
   end
 
   def test_employees_can_get_raises
-    employee = Employee.new( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
     employee.give_raise(5000)
-    assert_equal 85000, employee.salary
+    assert_equal 85000, Employee.find(employee.id).salary
   end
 
   def test_whole_departments_can_get_raises
-    employee = Employee.new( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
-    employee2 = Employee.new( name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
-    employee3 = Employee.new( name: "Sanic", email: "sanic@example.com", phone: "333-444-5555", salary: 20000)
-    development = Department.new("Development")
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
+    employee3 = Employee.create(name: "Sanic", email: "sanic@example.com", phone: "333-444-5555", salary: 20000)
+    development = Department.create(name: "Development")
     development.add_employee(employee)
     development.add_employee(employee2)
     development.give_raise(30000)
@@ -82,11 +101,11 @@ class ReviewsTest < Minitest::Test
   end
 
   def test_only_satisfactory_employees_get_raises
-    employee = Employee.new( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
-    employee2 = Employee.new( name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
-    employee2.give_review("bad negative less")
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
+    employee2.give_review(Review.create(text: "bad negative less"))
 
-    development = Department.new("Development")
+    development = Department.create(name: "Development")
     development.add_employee(employee)
     development.add_employee(employee2)
 
@@ -96,11 +115,11 @@ class ReviewsTest < Minitest::Test
   end
 
   def test_no_raises_for_all_bad_employees
-    employee = Employee.new( name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
-    employee.give_review("bad negative less")
-    employee2 = Employee.new( name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
-    employee2.give_review("bad negative less")
-    development = Department.new("Development")
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee.give_review(Review.create(text: "bad negative less"))
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
+    employee2.give_review(Review.create(text: "bad negative less"))
+    development = Department.create(name: "Development")
     development.add_employee(employee)
     development.add_employee(employee2)
     development.give_raise(20000)
@@ -109,17 +128,17 @@ class ReviewsTest < Minitest::Test
   end
 
   def test_reviews_can_be_scanned_and_classified
-    employee = Employee.new( name: "Zeke", salary: 100 )
-    z_review = "Zeke is a very positive person and encourages those around him, but he has not done well technically this year.  There are two areas in which Zeke has room for improvement.  First, when communicating verbally (and sometimes in writing), he has a tendency to use more words than are required.  This conversational style does put people at ease, which is valuable, but it often makes the meaning difficult to isolate, and can cause confusion.
-    Second, when discussing new requirements with project managers, less of the information is retained by Zeke long-term than is expected.  This has a few negative consequences: 1) time is spent developing features that are not useful and need to be re-run, 2) bugs are introduced in the code and not caught because the tests lack the same information, and 3) clients are told that certain features are complete when they are inadequate.  This communication limitation could be the fault of project management, but given that other developers appear to retain more information, this is worth discussing further."
-    employee2 = Employee.new( name: "Xavier", salary: 100 )
-    x_review = "Xavier is a huge asset to SciMed and is a pleasure to work with.  He quickly knocks out tasks assigned to him, implements code that rarely needs to be revisited, and is always willing to help others despite his heavy workload.  When Xavier leaves on vacation, everyone wishes he didn't have to go
-    Last year, the only concerns with Xavier performance were around ownership.  In the past twelve months, he has successfully taken full ownership of both Acme and Bricks, Inc.  Aside from some false starts with estimates on Acme, clients are happy with his work and responsiveness, which is everything that his managers could ask for."
-    employee3 = Employee.new( name: "Yvonne", salary: 100 )
-    y_review = "Thus far, there have been two concerns over Yvonne's performance, and both have been discussed with her in internal meetings.  First, in some cases, Yvonne takes longer to complete tasks than would normally be expected.  This most commonly manifests during development on existing applications, but can sometimes occur during development on new projects, often during tasks shared with Andrew.  In order to accommodate for these preferences, Yvonne has been putting more time into fewer projects, which has gone well.
-    Second, while in conversation, Yvonne has a tendency to interrupt, talk over others, and increase her volume when in disagreement.  In client meetings, she also can dwell on potential issues even if the client or other attendees have clearly ruled the issue out, and can sometimes get off topic."
-    employee4 = Employee.new( name: "Wanda", salary: 100 )
-    w_review = "Wanda has been an incredibly consistent and effective developer.  Clients are always satisfied with her work, developers are impressed with her productivity, and she's more than willing to help others even when she has a substantial workload of her own.  She is a great asset to Awesome Company, and everyone enjoys working with her.  During the past year, she has largely been devoted to work with the Cement Company, and she is the perfect woman for the job.  We know that work on a single project can become monotonous, however, so over the next few months, we hope to spread some of the Cement Company work to others.  This will also allow Wanda to pair more with others and spread her effectiveness to other projects."
+    employee = Employee.create( name: "Zeke", salary: 100 )
+    z_review = Review.create(text: "Zeke is a very positive person and encourages those around him, but he has not done well technically this year.  There are two areas in which Zeke has room for improvement.  First, when communicating verbally (and sometimes in writing), he has a tendency to use more words than are required.  This conversational style does put people at ease, which is valuable, but it often makes the meaning difficult to isolate, and can cause confusion.
+    Second, when discussing create requirements with project managers, less of the information is retained by Zeke long-term than is expected.  This has a few negative consequences: 1) time is spent developing features that are not useful and need to be re-run, 2) bugs are introduced in the code and not caught because the tests lack the same information, and 3) clients are told that certain features are complete when they are inadequate.  This communication limitation could be the fault of project management, but given that other developers appear to retain more information, this is worth discussing further.")
+    employee2 = Employee.create(name: "Xavier", salary: 100)
+    x_review = Review.create(text: "Xavier is a huge asset to SciMed and is a pleasure to work with.  He quickly knocks out tasks assigned to him, implements code that rarely needs to be revisited, and is always willing to help others despite his heavy workload.  When Xavier leaves on vacation, everyone wishes he didn't have to go
+    Last year, the only concerns with Xavier performance were around ownership.  In the past twelve months, he has successfully taken full ownership of both Acme and Bricks, Inc.  Aside from some false starts with estimates on Acme, clients are happy with his work and responsiveness, which is everything that his managers could ask for.")
+    employee3 = Employee.create(name: "Yvonne", salary: 100)
+    y_review = Review.create(text: "Thus far, there have been two concerns over Yvonne's performance, and both have been discussed with her in internal meetings.  First, in some cases, Yvonne takes longer to complete tasks than would normally be expected.  This most commonly manifests during development on existing applications, but can sometimes occur during development on create projects, often during tasks shared with Andrew.  In order to accommodate for these preferences, Yvonne has been putting more time into fewer projects, which has gone well.
+    Second, while in conversation, Yvonne has a tendency to interrupt, talk over others, and increase her volume when in disagreement.  In client meetings, she also can dwell on potential issues even if the client or other attendees have clearly ruled the issue out, and can sometimes get off topic.")
+    employee4 = Employee.create(name: "Wanda", salary: 100)
+    w_review = Review.create(text: "Wanda has been an incredibly consistent and effective developer.  Clients are always satisfied with her work, developers are impressed with her productivity, and she's more than willing to help others even when she has a substantial workload of her own.  She is a great asset to Awesome Company, and everyone enjoys working with her.  During the past year, she has largely been devoted to work with the Cement Company, and she is the perfect woman for the job.  We know that work on a single project can become monotonous, however, so over the next few months, we hope to spread some of the Cement Company work to others.  This will also allow Wanda to pair more with others and spread her effectiveness to other projects.")
 
     employee.give_review(z_review)
     employee2.give_review(x_review)
@@ -132,4 +151,91 @@ class ReviewsTest < Minitest::Test
     assert employee4.satisfactory?
   end
 
+  def test_total_employees
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
+    employee3 = Employee.create(name: "Yvonne", salary: 100)
+    development2 = Department.create(name: "Development")
+    development2.add_employee(employee)
+    development2.add_employee(employee2)
+    development2.add_employee(employee3)
+    assert_equal 3, development2.total_employees
+  end
+
+  def test_total_employees_alphabetized
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
+    employee3 = Employee.create(name: "Yvonne", salary: 100)
+    development3 = Department.create(name: "Development")
+    development3.add_employee(employee)
+    development3.add_employee(employee2)
+    development3.add_employee(employee3)
+    assert_equal ["Joanna", "Lunk", "Yvonne"], development3.employees_alpha
+  end
+
+  def test_least_paid_employee_in_department
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 150000)
+    employee3 = Employee.create(name: "Yvonne", salary: 100)
+    development4 = Department.create(name: "Development")
+    development4.add_employee(employee)
+    development4.add_employee(employee2)
+    development4.add_employee(employee3)
+    assert_equal "Yvonne", development4.least_paid.name
+  end
+
+  def test_paid_above_average_employees
+    employee = Employee.create(name: "Joanna", email: "jdark@example.com", phone: "515-888-4821", salary: 100)
+    employee2 = Employee.create(name: "Lunk", email: "lunk@example.com", phone: "882-329-3843", salary: 200)
+    employee3 = Employee.create(name: "Yvonne", salary: 100)
+    development5 = Department.create(name: "Development")
+    development5.add_employee(employee)
+    development5.add_employee(employee2)
+    development5.add_employee(employee3)
+    assert_equal ["Lunk"], development5.paid_above_average_employees
+  end
+
+  # def test_highest_paid_employee
+  #   assert_equal 15, Employee.select(:id).order(Salary: :desc).first.id
+  # end
+
+  # def test_employees_with_above_average_salary
+  #   assert_equal 17, Employee.select(:name, :salary).where(["salary > ?", Employee.average(:salary)]).length
+  # end
+
+  def test_palindrome_employees
+    Employee.create(name: "Ana", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    assert_equal ["Ana"], Employee.palindrome_employees
+  end
+
+  def test_move_employee_departments
+    chris = Employee.create(name: "Chris", email: "jdark@example.com", phone: "515-888-4821", salary: 80000)
+    development6 = Department.create(name: "Development6")
+    development6.add_employee(chris)
+    assert_equal "Chris", development6.employees[0].name
+    development7 = Department.create(name: "Development7")
+    development6.move_employee(chris, development7)
+    assert_equal "Chris", development7.employees[0].name
+  end
+
+  def test_merge_departments
+    development_stay = Department.create(name: "Development-stay")
+    development_stay.add_employee(Employee.create(name: "Chris", email: "jdark@example.com", phone: "515-888-4821", salary: 80000))
+    development_go = Department.create(name: "Development-go")
+    development_go.add_employee(Employee.create(name: "Becky", email: "becky@example.com", phone: "515-888-4821", salary: 120000))
+    assert_equal 1, development_stay.total_employees
+    assert_equal 1, development_go.total_employees
+    assert_equal 80000, development_stay.total_salary
+    assert_equal 120000, development_go.total_salary
+    assert Department.merge_departments(stay: development_stay, go: development_go)
+    assert_equal 2, development_stay.total_employees
+    assert_equal 200000, development_stay.total_salary
+  end
+
+  def test_give_all_employees_raise
+    old_total = Employee.total_salary
+    supposed_new_total = old_total + (Employee.count * 5000)
+    Employee.give_raise(5000, only_satisfactory: false)
+    assert_equal supposed_new_total, Employee.total_salary
+  end
 end
