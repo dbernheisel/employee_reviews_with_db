@@ -28,10 +28,9 @@ class Employee < ActiveRecord::Base
 
   def give_review(review)
     return false if review.nil?
-    reviews << review
+    self.reviews << review
     assess_performance
     self.save
-    return true
   end
 
   def assess_performance
