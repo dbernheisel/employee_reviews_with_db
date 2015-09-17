@@ -2,7 +2,7 @@
 
 ## Description
 
-Practicing with SQLite3 and ActiveRecord
+Practicing with SQLite3 and ActiveRecord.
 See this ERD [LucidChart](https://www.lucidchart.com/documents/view/344365a8-55c7-4977-8b7b-3a4da4cb3a49)
 
 *Normal Mode*
