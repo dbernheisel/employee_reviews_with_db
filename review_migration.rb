@@ -1,10 +1,16 @@
 require 'active_record'
 
-def ReviewMigration < ActiveRecord::Migration
+ActiveRecord::Base.establish_connection(
+  adapter: 'sqlite3',
+  database: 'development.sqlite3' #name of file on disk
+)
+
+class ReviewMigration < ActiveRecord::Migration
   def change
     create_table :reviews do |t|
-      t.string, :review
-      t.timestamps, null: false
+      t.string :text
+      t.integer :employee_id
+      t.timestamps null: false
     end
   end
 end
