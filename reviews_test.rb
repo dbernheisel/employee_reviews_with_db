@@ -4,6 +4,8 @@ require 'active_record'
 require './employee'
 require './department'
 require './review'
+require './company'
+require './company_migration'
 require './employee_migration'
 require './department_migration'
 require './review_migration'
@@ -15,16 +17,20 @@ ActiveRecord::Base.establish_connection(
   database: "testing.sqlite3"
 )
 
-
-ReviewMigration.migrate(:down) rescue nil
-DepartmentMigration.migrate(:down) rescue nil
-EmployeeMigration.migrate(:down) rescue nil
-ReviewMigration.migrate(:up)
-DepartmentMigration.migrate(:up)
-EmployeeMigration.migrate(:up)
-
+ActiveRecord::Migration.verbose = false
 
 class ReviewsTest < Minitest::Test
+
+  def setup
+    ReviewMigration.migrate(:down) rescue nil
+    DepartmentMigration.migrate(:down) rescue nil
+    EmployeeMigration.migrate(:down) rescue nil
+    CompanyMigration.migrate(:down) rescue nil
+    ReviewMigration.migrate(:up)
+    DepartmentMigration.migrate(:up)
+    EmployeeMigration.migrate(:up)
+    CompanyMigration.migrate(:up)
+  end
 
   def test_create_new_department
     dept = Department.create(name: "Development")
